@@ -1,0 +1,145 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Primitive Helpers ---
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isPrimaryTeacher() {
+      return isVerifiedUser() && request.auth.token.email == 'ujiansmpn1wnry@gmail.com';
+    }
+
+    function isAdmin() {
+      return isPrimaryTeacher() || (isVerifiedUser() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
+    }
+
+    // --- Entity Validation Blueprints ---
+    function isValidQuizAttempt(data) {
+      return data.keys().hasAll([
+        'ownerUid', 'studentName', 'studentClass', 'studentAbsentNo',
+        'status', 'adaptiveLevel', 'currentQuestionIndex', 'answeredCount',
+        'correctCount', 'score', 'scoreSpldv', 'scoreJaring', 'scoreBrsd',
+        'scoreLingkaran', 'scoreBrsl', 'scoreMemahami', 'scoreMengaplikasikan',
+        'scoreMenalar', 'pgCorrect', 'mcmaCorrect', 'bsCorrect',
+        'durationSeconds', 'answersSummary', 'createdAt', 'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'ownerUid', 'studentName', 'studentClass', 'studentAbsentNo',
+        'status', 'adaptiveLevel', 'currentQuestionIndex', 'answeredCount',
+        'correctCount', 'score', 'scoreSpldv', 'scoreJaring', 'scoreBrsd',
+        'scoreLingkaran', 'scoreBrsl', 'scoreMemahami', 'scoreMengaplikasikan',
+        'scoreMenalar', 'pgCorrect', 'mcmaCorrect', 'bsCorrect',
+        'durationSeconds', 'answersSummary', 'createdAt', 'updatedAt'
+      ]) &&
+      data.ownerUid is string && data.ownerUid.size() >= 1 && data.ownerUid.size() <= 128 && data.ownerUid.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.studentName is string && data.studentName.size() >= 2 && data.studentName.size() <= 80 &&
+      data.studentClass is string && data.studentClass.size() >= 2 && data.studentClass.size() <= 10 && data.studentClass in ['9A', '9B'] &&
+      data.studentAbsentNo is string && data.studentAbsentNo.size() >= 1 && data.studentAbsentNo.size() <= 10 &&
+      data.status is string && data.status.size() >= 4 && data.status.size() <= 20 && data.status in ['in_progress', 'completed'] &&
+      data.adaptiveLevel is string && data.adaptiveLevel.size() >= 4 && data.adaptiveLevel.size() <= 20 && data.adaptiveLevel in ['Dasar', 'Menengah', 'Mahir'] &&
+      data.currentQuestionIndex is int && data.currentQuestionIndex >= 0 && data.currentQuestionIndex <= 35 &&
+      data.answeredCount is int && data.answeredCount >= 0 && data.answeredCount <= 35 &&
+      data.correctCount is int && data.correctCount >= 0 && data.correctCount <= 35 &&
+      (data.score is int || data.score is float) && data.score >= 0 && data.score <= 100 &&
+      (data.scoreSpldv is int || data.scoreSpldv is float) && data.scoreSpldv >= 0 && data.scoreSpldv <= 100 &&
+      (data.scoreJaring is int || data.scoreJaring is float) && data.scoreJaring >= 0 && data.scoreJaring <= 100 &&
+      (data.scoreBrsd is int || data.scoreBrsd is float) && data.scoreBrsd >= 0 && data.scoreBrsd <= 100 &&
+      (data.scoreLingkaran is int || data.scoreLingkaran is float) && data.scoreLingkaran >= 0 && data.scoreLingkaran <= 100 &&
+      (data.scoreBrsl is int || data.scoreBrsl is float) && data.scoreBrsl >= 0 && data.scoreBrsl <= 100 &&
+      (data.scoreMemahami is int || data.scoreMemahami is float) && data.scoreMemahami >= 0 && data.scoreMemahami <= 100 &&
+      (data.scoreMengaplikasikan is int || data.scoreMengaplikasikan is float) && data.scoreMengaplikasikan >= 0 && data.scoreMengaplikasikan <= 100 &&
+      (data.scoreMenalar is int || data.scoreMenalar is float) && data.scoreMenalar >= 0 && data.scoreMenalar <= 100 &&
+      data.pgCorrect is int && data.pgCorrect >= 0 && data.pgCorrect <= 17 &&
+      data.mcmaCorrect is int && data.mcmaCorrect >= 0 && data.mcmaCorrect <= 8 &&
+      data.bsCorrect is int && data.bsCorrect >= 0 && data.bsCorrect <= 10 &&
+      data.durationSeconds is int && data.durationSeconds >= 0 && data.durationSeconds <= 86400 &&
+      data.answersSummary is list && data.answersSummary.size() <= 35 &&
+      (data.answersSummary.size() == 0 || (data.answersSummary[0] is string && data.answersSummary[0].size() <= 16)) &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    function isValidAdminUser(data) {
+      return data.keys().hasAll(['uid', 'email', 'displayName', 'createdAt']) &&
+        data.keys().hasOnly(['uid', 'email', 'displayName', 'createdAt']) &&
+        data.uid is string && data.uid.size() >= 1 && data.uid.size() <= 128 && data.uid.matches('^[a-zA-Z0-9_\\-]+$') &&
+        data.email is string && data.email.size() >= 3 && data.email.size() <= 120 &&
+        data.displayName is string && data.displayName.size() >= 2 && data.displayName.size() <= 80 &&
+        data.createdAt is timestamp;
+    }
+
+    // --- Collection Rules ---
+    match /quiz_attempts/{attemptId} {
+      allow get: if isVerifiedUser() && isValidId(attemptId) && (isAdmin() || existing().ownerUid == request.auth.uid);
+      allow list: if isVerifiedUser() && (isPrimaryTeacher() || resource.data.ownerUid == request.auth.uid);
+
+      allow create: if isVerifiedUser() &&
+        isValidId(attemptId) &&
+        isValidQuizAttempt(incoming()) &&
+        incoming().ownerUid == request.auth.uid &&
+        incoming().status == 'in_progress' &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+
+      allow update: if isVerifiedUser() &&
+        isValidId(attemptId) &&
+        isValidQuizAttempt(incoming()) &&
+        incoming().ownerUid == existing().ownerUid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time && (
+          isAdmin() ||
+          (
+            existing().ownerUid == request.auth.uid &&
+            existing().status != 'completed' &&
+            incoming().diff(existing()).affectedKeys().hasOnly([
+              'status', 'adaptiveLevel', 'currentQuestionIndex', 'answeredCount',
+              'correctCount', 'score', 'scoreSpldv', 'scoreJaring', 'scoreBrsd',
+              'scoreLingkaran', 'scoreBrsl', 'scoreMemahami', 'scoreMengaplikasikan',
+              'scoreMenalar', 'pgCorrect', 'mcmaCorrect', 'bsCorrect',
+              'durationSeconds', 'answersSummary', 'updatedAt'
+            ])
+          )
+        );
+
+      allow delete: if isAdmin() && isValidId(attemptId);
+    }
+
+    match /admins/{uid} {
+      allow get: if isVerifiedUser() && isValidId(uid) && (isAdmin() || request.auth.uid == uid);
+      allow list: if isPrimaryTeacher();
+      allow create: if isAdmin() &&
+        isValidId(uid) &&
+        isValidAdminUser(incoming()) &&
+        incoming().uid == uid &&
+        incoming().createdAt == request.time;
+      allow update: if false;
+      allow delete: if isAdmin() && isValidId(uid);
+    }
+
+    match /test/connection {
+      allow get: if isSignedIn();
+    }
+  }
+}

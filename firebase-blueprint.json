@@ -1,0 +1,198 @@
+{
+  "entities": {
+    "QuizAttempt": {
+      "title": "QuizAttempt",
+      "description": "Rekam jejak pengerjaan kuis Try Out SAS Matematika SMP Kelas 9 (9A & 9B) secara real-time.",
+      "type": "object",
+      "properties": {
+        "ownerUid": {
+          "type": "string",
+          "description": "UID Firebase pengguna yang mengerjakan kuis.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "studentName": {
+          "type": "string",
+          "description": "Nama lengkap siswa.",
+          "minLength": 2,
+          "maxLength": 80
+        },
+        "studentClass": {
+          "type": "string",
+          "description": "Kelas siswa (9A atau 9B).",
+          "enum": ["9A", "9B"],
+          "minLength": 2,
+          "maxLength": 10
+        },
+        "studentAbsentNo": {
+          "type": "string",
+          "description": "Nomor absen siswa.",
+          "minLength": 1,
+          "maxLength": 10
+        },
+        "status": {
+          "type": "string",
+          "description": "Status pengerjaan kuis.",
+          "enum": ["in_progress", "completed"],
+          "minLength": 4,
+          "maxLength": 20
+        },
+        "adaptiveLevel": {
+          "type": "string",
+          "description": "Tingkat kesulitan adaptif terkini.",
+          "enum": ["Dasar", "Menengah", "Mahir"],
+          "minLength": 4,
+          "maxLength": 20
+        },
+        "currentQuestionIndex": {
+          "type": "integer",
+          "description": "Indeks soal aktif (0-35)."
+        },
+        "answeredCount": {
+          "type": "integer",
+          "description": "Jumlah soal yang sudah dijawab (0-35)."
+        },
+        "correctCount": {
+          "type": "integer",
+          "description": "Jumlah jawaban benar (0-35)."
+        },
+        "score": {
+          "type": "number",
+          "description": "Nilai akhir skala 0-100."
+        },
+        "scoreSpldv": {
+          "type": "number",
+          "description": "Skor materi SPLDV (0-100)."
+        },
+        "scoreJaring": {
+          "type": "number",
+          "description": "Skor materi Jaring-Jaring Bangun Ruang (0-100)."
+        },
+        "scoreBrsd": {
+          "type": "number",
+          "description": "Skor materi Bangun Ruang Sisi Datar (0-100)."
+        },
+        "scoreLingkaran": {
+          "type": "number",
+          "description": "Skor materi Lingkaran (0-100)."
+        },
+        "scoreBrsl": {
+          "type": "number",
+          "description": "Skor materi Bangun Ruang Sisi Lengkung (0-100)."
+        },
+        "scoreMemahami": {
+          "type": "number",
+          "description": "Skor kompetensi Memahami (0-100)."
+        },
+        "scoreMengaplikasikan": {
+          "type": "number",
+          "description": "Skor kompetensi Mengaplikasikan (0-100)."
+        },
+        "scoreMenalar": {
+          "type": "number",
+          "description": "Skor kompetensi Menalar (0-100)."
+        },
+        "pgCorrect": {
+          "type": "integer",
+          "description": "Jumlah soal Pilihan Ganda benar (0-17)."
+        },
+        "mcmaCorrect": {
+          "type": "integer",
+          "description": "Jumlah soal MCMA benar (0-8)."
+        },
+        "bsCorrect": {
+          "type": "integer",
+          "description": "Jumlah soal Benar/Salah benar (0-10)."
+        },
+        "durationSeconds": {
+          "type": "integer",
+          "description": "Durasi pengerjaan dalam detik."
+        },
+        "answersSummary": {
+          "type": "array",
+          "description": "Ringkasan hasil per soal (maksimal 35 item)."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Waktu server saat sesi dimulai."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Waktu server saat pembaruan terakhir."
+        }
+      },
+      "required": [
+        "ownerUid",
+        "studentName",
+        "studentClass",
+        "studentAbsentNo",
+        "status",
+        "adaptiveLevel",
+        "currentQuestionIndex",
+        "answeredCount",
+        "correctCount",
+        "score",
+        "scoreSpldv",
+        "scoreJaring",
+        "scoreBrsd",
+        "scoreLingkaran",
+        "scoreBrsl",
+        "scoreMemahami",
+        "scoreMengaplikasikan",
+        "scoreMenalar",
+        "pgCorrect",
+        "mcmaCorrect",
+        "bsCorrect",
+        "durationSeconds",
+        "answersSummary",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "AdminUser": {
+      "title": "AdminUser",
+      "description": "Daftar UID guru yang memiliki akses penuh ke Dasbor Guru.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "UID pengguna guru.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "description": "Email guru.",
+          "minLength": 3,
+          "maxLength": 120
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Nama guru.",
+          "minLength": 2,
+          "maxLength": 80
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Waktu server saat ditambahkan."
+        }
+      },
+      "required": ["uid", "email", "displayName", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/quiz_attempts/{attemptId}": {
+      "schema": { "$ref": "#/entities/QuizAttempt" },
+      "description": "Koleksi sesi dan nilai Try Out SAS siswa kelas 9A dan 9B."
+    },
+    "/admins/{uid}": {
+      "schema": { "$ref": "#/entities/AdminUser" },
+      "description": "Koleksi akun guru/admin tambahan yang berwenang mengakses dasbor."
+    }
+  }
+}

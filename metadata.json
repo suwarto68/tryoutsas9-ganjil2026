@@ -1,0 +1,6 @@
+{
+  "name": "Try Out SAS Matematika Kelas 9 Wanaraya",
+  "description": "Aplikasi kuis interaktif adaptif Try Out SAS Matematika SMP Kelas 9 (9A & 9B) berbasis konteks lokal Wanaraya dengan audio narasi dan dasbor guru real-time.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
